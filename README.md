@@ -22,26 +22,37 @@ This app is designed for desktop platforms (macOS, should work on Linux and mayb
 
 ![Pulse-Libre Desktop Screenshot](images/screenshot.png)
 
-### UI Design
+### UI
 
-The application features a modern, dark-themed interface inspired by contemporary mobile health and wellness apps:
+A dark, card-based desktop interface with four tabs:
 
-- **Card-based layout** with rounded corners and subtle shadows
-- **Status bar** showing Connection, Battery, and Charging status at a glance
-- **Session Timer** with large, easy-to-read display and progress indicator
-- **Intensity Control** with slider and +/- buttons for precise adjustment
-- **Large action buttons** with clear visual states (Start/Stop/Scan)
-- **Responsive animations** for button presses and state changes
-- **Clean typography** using system fonts for optimal readability
+- **Session**: countdown ring, 1-9 intensity meter (click or drag the bars), session length, presets, and a large Start/Stop button. A session keeps running while you browse the other tabs.
+- **History**: completed, stopped and interrupted sessions with totals for all time and the last 7 days.
+- **Device**: name, model, firmware, address, battery voltage and charging status; connect/disconnect; guarded DFU (firmware update) mode.
+- **Settings**: stimulation side (left/both/right), LED brightness, default session length and intensity, connect-on-launch, and preset management.
 
+The header always shows connection and battery status. If a stop command cannot be confirmed (for example the connection dropped mid-session), a warning banner stays up until the device acknowledges the stop.
 
-## Features
+**Keyboard shortcuts:** `Space` start/stop, `Up`/`Down` intensity, `Left`/`Right` session length, `Esc` stop (Esc never quits the app), `Ctrl+1`-`Ctrl+4` switch tabs.
 
-- Scan and connect to [Pulsetto devices](https://juraj.bednar.io/pulsetto) automatically.
-- Set strength levels from 1 to 9.
-- Start and stop a timer (default 4 minutes).
-- Display battery level and charging status.
-- Compatible with desktop platforms (Windows, macOS, Linux).
+Settings, presets and history are stored as JSON in Kivy's per-user data directory (e.g. `%APPDATA%\pulselibre` on Windows, `~/Library/Application Support/pulselibre` on macOS).
+
+### Code layout
+
+```
+main.py                    entry point (window config, launches the app)
+pulselibre/
+  device.py                BLE protocol and connection handling (no Kivy dependency)
+  session.py               session timer, keep-alive, history records
+  storage.py               settings, presets and history persistence
+  theme.py                 colour palette and formatting helpers
+  widgets.py               reusable themed widgets
+  app.py                   app shell: header, tabs, device -> UI state, shortcuts
+  screens/                 one module per tab (session, history, device_info, settings)
+```
+
+To add a screen, create a module in `pulselibre/screens/`, import it in `screens/__init__.py`, and add it to `TABS` and the `ScreenManager` in `app.py`.
+
 
 ## Protocol
 
@@ -82,12 +93,11 @@ For those interested, the full protocol documentation is
    ```
 ## Usage
 
-- Upon starting, the app will attempt to scan and connect to a Pulsetto device.
-- If a device is not found, a "Scan" button will appear. Press it to scan again.
-- Once connected, battery level and charging status will be displayed.
-- Use the slider to set the desired strength (1-9).
-- Press the "Start" button to begin the timer and activate the device.
-- Press the "Stop" button to stop the device and the timer.
+- Upon starting, the app searches for a Pulsetto device (this can be turned off in Settings).
+- If no device is found, press "Connect to device" to search again.
+- Pick a preset or set the session length and intensity (1-9).
+- Press "Start session" (or `Space`) to begin; the intensity ramps up to your setting.
+- Press "Stop session" (or `Esc`) to stop the device and the timer.
 
 ## Why? Backstory
 
