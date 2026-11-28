@@ -42,6 +42,17 @@ Two write modes are used:
 Use `writeWithResponse` for ramp and stop transitions, and
 `writeWithoutResponse` for normal control and status commands.
 
+### Space commands apart
+
+The device silently drops commands that arrive back to back. Measured on a
+Pulsetto_ST_02 (firmware 1.1.22) from Windows: `v\n` immediately followed by
+`i\n` produced no reply to either (3/3 tries); with a gap of 50 ms or more,
+both were answered (11/11). Pairs sent this way include `u` + `Q` (status
+polling) and the side + LED commands at the end of the start sequence.
+
+Leave at least ~100 ms between writes. Pulse Libre uses 150 ms
+(`MIN_WRITE_GAP` in `pulselibre/device.py`).
+
 ## Discovery and Identification
 
 Devices advertise with a BLE name starting with `Pulsetto`.
@@ -89,6 +100,10 @@ Default behavior:
 - Other standard programs typically start with `F`.
 - A client can choose a fixed LED setting if desired.
 
+Observed on a Pulsetto_ST_02 (firmware 1.1.22): `G\n` made no visible
+difference to the LED and was not echoed back, while `D\n` sometimes is. Not
+every model or firmware may honour these commands.
+
 ## Session Start Sequence
 
 The session start sequence is the same on Lite and Fit.
@@ -115,6 +130,21 @@ The `0 -> 5 -> 0 -> target` pattern is part of the normal startup sequence.
 2. Send `-\n` using `writeWithResponse`
 3. Send `-\n` using `writeWithResponse`
 
+### Losing the connection does not stop stimulation
+
+If the BLE connection drops mid-session, the device **keeps stimulating** at
+its current level. It has no disconnect timeout; it stops only when the stop
+sequence is received. This was observed on a Pulsetto_ST_02 (firmware 1.1.22):
+host Bluetooth was turned off during a session at level 2, and stimulation
+continued until the host reconnected and sent the stop sequence.
+
+Clients should therefore:
+
+- treat a disconnect during a session as "device may still be running",
+- tell the user (the device can always be switched off by hand),
+- send the stop sequence as soon as the connection is re-established, and
+- never resume a session automatically after reconnecting.
+
 ## Changing Intensity During a Session
 
 To change intensity while stimulation is active, send `1\n` through `9\n`
@@ -131,6 +161,11 @@ To pause output without fully ending the session, send `0\n`.
 | `C\n` | right |
 
 `D\n` is the normal default.
+
+Observed on a Pulsetto_ST_02 (firmware 1.1.22): `A\n` and `C\n` had no effect.
+Both sides were stimulated, the commands were not echoed, and the status
+reply kept reporting `mode:D`. Side selection may depend on model or
+firmware.
 
 ## Status Polling
 

@@ -29,7 +29,7 @@ A dark, card-based desktop interface with four tabs:
 - **Session**: countdown ring, 1-9 intensity meter (click or drag the bars), session length, presets, and a large Start/Stop button. A session keeps running while you browse the other tabs.
 - **History**: completed, stopped and interrupted sessions with totals for all time and the last 7 days.
 - **Device**: name, model, firmware, address, battery voltage and charging status; connect/disconnect; guarded DFU (firmware update) mode.
-- **Settings**: stimulation side (left/both/right), LED brightness, default session length and intensity, connect-on-launch, and preset management.
+- **Settings**: default session length and intensity, connect-on-launch, and preset management.
 
 The header always shows connection and battery status. If a stop command cannot be confirmed (for example the connection dropped mid-session), a warning banner stays up until the device acknowledges the stop.
 
@@ -53,6 +53,15 @@ pulselibre/
 
 To add a screen, create a module in `pulselibre/screens/`, import it in `screens/__init__.py`, and add it to `TABS` and the `ScreenManager` in `app.py`.
 
+
+## Features
+
+- Scan and connect to [Pulsetto devices](https://juraj.bednar.io/pulsetto) automatically, with automatic reconnect.
+- Set strength levels from 1 to 9; changes ramp one level at a time.
+- Timed sessions (default 10 minutes) with presets and a local session history.
+- Display battery level, charging status, model and firmware.
+- If the connection drops mid-session, the device is told to stop as soon as it reconnects (the device itself keeps stimulating while disconnected).
+- Compatible with desktop platforms (Windows, macOS, Linux).
 
 ## Protocol
 
