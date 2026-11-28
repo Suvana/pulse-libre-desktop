@@ -5,14 +5,12 @@ from kivy.properties import DictProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.screenmanager import Screen
 
-from ..device import LED_LEVELS, MAX_LEVEL, MIN_LEVEL, STIM_SIDES
+from ..device import MAX_LEVEL, MIN_LEVEL
 from ..storage import MAX_MINUTES, MIN_MINUTES
 from ..widgets import confirm
 
 KV = r"""
 #:import C pulselibre.theme.C
-#:import STIM_SIDES pulselibre.device.STIM_SIDES
-#:import LED_LEVELS pulselibre.device.LED_LEVELS
 
 <PresetRow>:
     size_hint_y: None
@@ -63,28 +61,6 @@ KV = r"""
             height: self.minimum_height
             padding: dp(20), dp(16), dp(20), dp(20)
             spacing: dp(16)
-
-            Card:
-                size_hint_y: None
-                height: self.minimum_height
-                SectionLabel:
-                    text: "Stimulation"
-                SettingRow:
-                    title: "Side"
-                    hint: "Which electrode side to stimulate. Applied when a session starts."
-                    SegmentedControl:
-                        pos_hint: {"center_y": .5}
-                        options: [(k, v) for k, v in STIM_SIDES.items()]
-                        selected: app.settings.stim_side
-                        on_selected: app.settings.stim_side = self.selected
-                SettingRow:
-                    title: "LED brightness"
-                    hint: "Device indicator light during a session."
-                    SegmentedControl:
-                        pos_hint: {"center_y": .5}
-                        options: [(k, v) for k, v in LED_LEVELS.items()]
-                        selected: app.settings.led_intensity
-                        on_selected: app.settings.led_intensity = self.selected
 
             Card:
                 size_hint_y: None

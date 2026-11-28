@@ -62,6 +62,10 @@ def _clean_preset(p):
 
 
 class Settings(EventDispatcher):
+    # stim_side and led_intensity have no UI: a Pulsetto_ST_02 (fw 1.1.22)
+    # ignores the side (A/C) and LED (E/F/G) commands and always reports
+    # mode:D. They are kept, and still sent at session start, so a model that
+    # supports them only needs the Settings controls restored.
     stim_side = OptionProperty("D", options=list(STIM_SIDES))
     led_intensity = OptionProperty("E", options=list(LED_LEVELS))
     default_minutes = NumericProperty(10)

@@ -15,8 +15,6 @@ from ..widgets import HoverBehavior, prompt_text
 KV = r"""
 #:import C pulselibre.theme.C
 #:import fmt_clock pulselibre.theme.fmt_clock
-#:import STIM_SIDES pulselibre.device.STIM_SIDES
-#:import LED_LEVELS pulselibre.device.LED_LEVELS
 
 <PresetChip>:
     size_hint: None, None
@@ -151,10 +149,6 @@ KV = r"""
                             size_hint_y: None
                             height: self.minimum_height
                             spacing: dp(8)
-                    MutedLabel:
-                        text: "%s side%s · LED %s · change in Settings" % (STIM_SIDES[app.settings.stim_side], "s" if app.settings.stim_side == "D" else "", LED_LEVELS[app.settings.led_intensity].lower())
-                        color: C("text_3")
-                        font_size: "12sp"
 
         PillButton:
             size_hint_y: None

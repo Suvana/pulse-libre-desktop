@@ -16,6 +16,7 @@ battery_voltage, charging, firmware, identity, stop_pending, stimulating.
 import asyncio
 import logging
 import threading
+import time
 import traceback
 from concurrent.futures import CancelledError
 
@@ -32,6 +33,10 @@ SCAN_TIMEOUT = 10.0
 
 # Delay between single-level intensity steps sent to the device
 RAMP_STEP_DELAY = 0.4
+
+# Minimum spacing between any two writes. Measured on a Pulsetto (fw 1.1.22,
+# Windows): commands sent with no gap are dropped; 50 ms was already enough.
+MIN_WRITE_GAP = 0.15
 
 # Battery voltage constants (from official APK: 3.5V=0%, 3.9V=100%)
 BATTERY_FULL_VOLTAGE = 3.9
@@ -135,6 +140,8 @@ class PulsettoDevice:
         self._reconnecting = False
         self._user_disconnected = False
         self._connect_lock = asyncio.Lock()
+        self._write_lock = asyncio.Lock()
+        self._last_write = 0.0
 
         self.loop_thread = AsyncioLoopThread()
         self._submit(self._poll_loop())
@@ -403,9 +410,19 @@ class PulsettoDevice:
             try:
                 if with_response is None:
                     with_response = command.strip() in ("+", "-")
-                await client.write_gatt_char(
-                    UART_RX_CHAR_UUID, command.encode(), response=with_response
-                )
+                # The device silently drops commands that arrive back to back
+                # (e.g. "v" then "i" with no gap: neither is answered), so
+                # serialize writes and keep at least MIN_WRITE_GAP between them.
+                async with self._write_lock:
+                    wait = self._last_write + MIN_WRITE_GAP - time.monotonic()
+                    if wait > 0:
+                        await asyncio.sleep(wait)
+                    try:
+                        await client.write_gatt_char(
+                            UART_RX_CHAR_UUID, command.encode(), response=with_response
+                        )
+                    finally:
+                        self._last_write = time.monotonic()
                 print(
                     f"Sent command: {command.strip()} "
                     f"(response={'yes' if with_response else 'no'})"
